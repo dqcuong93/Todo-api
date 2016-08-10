@@ -7,7 +7,7 @@ var todos = [{
     completed: false
 }, {
     id: 2,
-    description: 'go to the cinema',
+    description: 'go to the movie theater',
     completed: false
 }, {
     id: 3,
