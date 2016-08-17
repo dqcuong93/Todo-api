@@ -52,20 +52,37 @@ app.get('/todos/:id', function (req, res) {
     }
 });
 
-//POST todos/ with body-parser module
+
+//POST /todos with body-parser module
 app.post('/todos', function (req, res) {
+    //_.pick to keep the information we want
     var body = _.pick(req.body, 'description', 'completed');
 
     if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
         return res.status(400).send();
     }
 
+    //Trim remove space before and after sentence
     body.description = body.description.trim();
 
     body.id = todoNextID;
     todos.push(body);
     todoNextID += 1;
     res.send(body);
+});
+
+
+//DELETE /todos/:id
+app.delete('/todos/:id', function (req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, {id: todoID});
+
+    if (matchedTodo) {
+        todos = _.without(todos, matchedTodo);
+        res.status(200).json(matchedTodo);
+    } else {
+        res.status(404).send('Not found!');
+    }
 });
 
 app.listen(PORT, function () {
