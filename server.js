@@ -85,6 +85,34 @@ app.delete('/todos/:id', function (req, res) {
     }
 });
 
+
+//PUT /todos/:id
+app.put('/todos/:id', function (req, res) {
+    var body = _.pick(req.body, 'description', 'completed');
+    var validAttribute = {};
+    var todoID = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, {id: todoID});
+
+    if (!matchedTodo) {
+        return res.status(404).send();
+    }
+
+    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttribute.completed = body.completed;
+    } else if (body.hasOwnProperty('completed')) {
+        return res.status(400).send();
+    }
+
+    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+        validAttribute.description = body.description;
+    } else if (body.hasOwnProperty('description')) {
+        return res.status(400).send();
+    }
+
+    _.extend(matchedTodo, validAttribute);
+    res.status(200).json(matchedTodo);
+});
+
 app.listen(PORT, function () {
     console.log('server listening on port ' + PORT);
 });
