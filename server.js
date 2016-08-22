@@ -28,8 +28,18 @@ app.get('/', function (req, res) {
 
 
 //GET todos/
+//GET with QUERY todos?completed=true
 app.get('/todos', function (req, res) {
-    res.json(todos);
+    var queryParams = req.query;
+    var filteredTodo = todos;
+
+    if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+        filteredTodo = _.where(filteredTodo, {completed: true});
+    } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+        filteredTodo = _.where(filteredTodo, {completed: false});
+    }
+
+    res.json(filteredTodo);
 });
 
 
