@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParse = require('body-parser');
 var _ = require('underscore');
+var db = require('./db');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -71,20 +72,38 @@ app.get('/todos/:id', function (req, res) {
 
 //POST /todos with body-parser module
 app.post('/todos', function (req, res) {
-    //_.pick to keep the information we want
+    //pick method is to keep the information that we want
     var body = _.pick(req.body, 'description', 'completed');
 
-    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-        return res.status(400).send();
-    }
+    //First way
+    //db.todo.create({
+    //    description: body.description,
+    //    completed: body.completed
+    //}).then(function (todo) {
+    //    res.status(200).send(todo.toJSON());
+    //}).catch(function (e) {
+    //    res.status(400).json(e);
+    //});
 
-    //Trim remove space before and after sentence
-    body.description = body.description.trim();
+    //Another way
+    db.todo.create(body).then(function (todo) {
+        res.json(todo.toJSON());
+    }, function (e) {
+        res.status(400).json(e);
+    });
 
-    body.id = todoNextID;
-    todos.push(body);
-    todoNextID += 1;
-    res.send(body);
+
+    //if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+    //    return res.status(400).send();
+    //}
+    //
+    ////Trim remove space before and after sentence
+    //body.description = body.description.trim();
+    //
+    //body.id = todoNextID;
+    //todos.push(body);
+    //todoNextID += 1;
+    //res.send(body);
 });
 
 
@@ -129,6 +148,8 @@ app.put('/todos/:id', function (req, res) {
     res.status(200).json(matchedTodo);
 });
 
-app.listen(PORT, function () {
-    console.log('server listening on port ' + PORT);
+db.sequelize.sync().then(function () {
+    app.listen(PORT, function () {
+        console.log('server listening on port ' + PORT);
+    });
 });
