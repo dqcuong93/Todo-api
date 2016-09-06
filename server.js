@@ -143,14 +143,29 @@ app.post('/todos', function (req, res) {
 //DELETE /todos/:id
 app.delete('/todos/:id', function (req, res) {
     var todoID = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {id: todoID});
 
-    if (matchedTodo) {
-        todos = _.without(todos, matchedTodo);
-        res.status(200).json(matchedTodo);
-    } else {
-        res.status(404).send('Not found!');
-    }
+    db.todo.destroy({
+        where: {
+            id: todoID
+        }
+    }).then(function (deletedRows) {
+        if (deletedRows === 0) {
+            res.status(404).send('Data not found');
+        } else {
+            res.status(204).send('You have deleted ' + deletedRows + ' row(s)');
+        }
+    }).catch(function (e) {
+        res.status(500).send(e);
+    });
+
+    //var matchedTodo = _.findWhere(todos, {id: todoID});
+    //
+    //if (matchedTodo) {
+    //    todos = _.without(todos, matchedTodo);
+    //    res.status(200).json(matchedTodo);
+    //} else {
+    //    res.status(404).send('Not found!');
+    //}
 });
 
 
