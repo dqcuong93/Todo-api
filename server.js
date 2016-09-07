@@ -172,28 +172,53 @@ app.delete('/todos/:id', function (req, res) {
 //PUT /todos/:id
 app.put('/todos/:id', function (req, res) {
     var body = _.pick(req.body, 'description', 'completed');
-    var validAttribute = {};
+    var attributes = {};
     var todoID = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {id: todoID});
+    //var matchedTodo = _.findWhere(todos, {id: todoID});
 
-    if (!matchedTodo) {
-        return res.status(404).send();
+    //var validAttribute = {};
+    //if (!matchedTodo) {
+    //    return res.status(404).send();
+    //}
+
+    //if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+    //    validAttribute.completed = body.completed;
+    //} else if (body.hasOwnProperty('completed')) {
+    //    return res.status(400).send();
+    //}
+    //
+    //if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+    //    validAttribute.description = body.description;
+    //} else if (body.hasOwnProperty('description')) {
+    //    return res.status(400).send();
+    //}
+
+    if (body.hasOwnProperty('completed')) {
+        attributes.completed = body.completed;
     }
 
-    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        validAttribute.completed = body.completed;
-    } else if (body.hasOwnProperty('completed')) {
-        return res.status(400).send();
+    if (body.hasOwnProperty('description')) {
+        attributes.description = body.description;
     }
 
-    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-        validAttribute.description = body.description;
-    } else if (body.hasOwnProperty('description')) {
-        return res.status(400).send();
-    }
+    //_.extend(matchedTodo, validAttribute);
+    //res.status(200).json(matchedTodo);
 
-    _.extend(matchedTodo, validAttribute);
-    res.status(200).json(matchedTodo);
+    db.todo.findById(todoID).then(function (todo) {
+        if (todo){
+            todo.update(attributes).then(function (todo) {
+                res.send(todo.toJSON());
+            }, function (e) {
+                res.status(400).json(e);        //400 means invalid synctax
+            });
+        } else {
+            res.status(404).json({
+                error: 'Data not found!'
+            })
+        }
+    }, function () {
+        res.status(500).send();
+    })
 });
 
 db.sequelize.sync().then(function () {
