@@ -34,7 +34,9 @@ app.get('/', function (req, res) {
 //GET with QUERY /todos?completed=true&q=work
 app.get('/todos', middleware.requireAuthentication, function (req, res) {
     var query = req.query;
-    var where = {};
+    var where = {
+        userId: req.user.get('id')
+    };
 
     if (query.hasOwnProperty('completed') && query.completed === 'true') {
         where.completed = true;
@@ -78,7 +80,12 @@ app.get('/todos', middleware.requireAuthentication, function (req, res) {
 app.get('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var todoID = parseInt(req.params.id, 10);
 
-    db.todo.findById(todoID).then(function (todo) {
+    db.todo.findOne({
+        where: {
+            id: todoID,
+            userId: req.user.get('id')
+        }
+    }).then(function (todo) {
         if (!!todo) {
             res.json(todo.toJSON());
         } else {
@@ -122,7 +129,11 @@ app.post('/todos', middleware.requireAuthentication, function (req, res) {
 
     //Another way
     db.todo.create(body).then(function (todo) {
-        res.json(todo.toJSON());
+        req.user.addTodo(todo).then(function () {
+            return todo.reload();
+        }).then(function (todo) {
+            res.json(todo.toJSON());
+        })
     }, function (e) {
         res.status(400).json(e);
     });
@@ -148,7 +159,8 @@ app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
 
     db.todo.destroy({
         where: {
-            id: todoID
+            id: todoID,
+            userId: req.user.get('id')
         }
     }).then(function (deletedRows) {
         if (deletedRows === 0) {
@@ -206,7 +218,12 @@ app.put('/todos/:id', middleware.requireAuthentication, function (req, res) {
     //_.extend(matchedTodo, validAttribute);
     //res.status(200).json(matchedTodo);
 
-    db.todo.findById(todoID).then(function (todo) {
+    db.todo.findOne({
+        where: {
+            id: todoID,
+            userId: req.user.get('id')
+        }
+    }).then(function (todo) {
         if (todo) {
             todo.update(attributes).then(function (todo) {
                 res.send(todo.toJSON());

@@ -19,20 +19,53 @@ var Todo = sequelize.define('todo', {
     }
 });
 
+var User = sequelize.define('user', {
+    email: Sequelize.STRING
+});
+
+Todo.belongsTo(User);
+User.hasMany(Todo);
+
 sequelize.sync({
     //Force create DB
-    //force: true
+    // force: true
 }).then(function () {
     console.log('Everything is synced !');
 
-    //Fetch data from exist DB
-    Todo.findById(1).then(function (todo) {
-        if (todo) {
-            console.log(todo.toJSON());
-        } else {
-            console.log('No data found');
-        }
+    // Get all todo belongs to user with id 1
+    User.findById(1).then(function (user) {
+        user.getTodos({
+            where: {
+                completed: false
+            }
+        }).then(function (todos) {
+            todos.forEach(function(todo) {
+                console.log(todo.toJSON());
+            })
+        })
     });
+
+    // Create instance for database
+    // User.create({
+    //     email: 'dqcuong93@yahoo.com.vn'
+    // }).then(function () {
+    //     return Todo.create({
+    //         description: 'Clean yard'
+    //     })
+    // }).then(function (todo) {
+    //     User.findById(1).then(function (user) {
+    //         user.addTodo(todo);
+    //     });
+    // });
+
+    //Fetch data from exist DB
+    // Todo.findById(1).then(function (todo) {
+    //     if (todo) {
+    //         console.log(todo.toJSON());
+    //     } else {
+    //         console.log('No data found');
+    //     }
+    // });
 
     //Create new DB
     //Todo.create({
